@@ -1,21 +1,30 @@
 const request = require('request');
-const inputName = process.argv[2];
-let req = request(`https://api.thecatapi.com/v1/breeds/search?q=${inputName}`, (err, header, body) => {
 
-  const data = JSON.parse(body);
-  if (data[0] === undefined) {
-    console.log('ERROR: Cat not found!');
-    return;
-  }
-  console.log('Data: ', data);
-  console.log('Type of data: ',typeof data);
-  console.log('Description: ', data[0].description);
-});
+const fetchBreedDescription = function(inputName, callback) {
+  const req = request(`https://api.thecatapi.com/v1/breeds/search?q=${inputName}`, (err, header, body) => {
+    const data = JSON.parse(body);
+    if (data[0] === undefined) {
+      callback('Cat not found!', null);
+      return;
+    } else {
+      const description = data[0].description;
+    
+      callback(null, description);
+    }
+    //on response get status code and if it is 404 return error
+    req.on('response', (response)=>{
+      if (response.statusCode === 404) {
+        callback('Request failed!', null);
+        return;
+      }
+    });
+  });
 
-req.on('response', (response)=>{
-  if (response.statusCode === 404) {
-    console.log('ERROR: request for cat failed');
-    return;
-  }
-  console.log(response.statusCode);
-});
+};
+
+
+
+
+
+
+module.exports = { fetchBreedDescription };
